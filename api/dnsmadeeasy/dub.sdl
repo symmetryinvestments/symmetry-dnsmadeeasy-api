@@ -1,0 +1,5 @@
+name "dnsmadeeasy"
+description "A minimal D application."
+copyright "Copyright © 2015, laeeth"
+authors "laeeth"
+dependency "kaleidic-helper" version="*"
