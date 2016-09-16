@@ -238,7 +238,8 @@ auto updateRecordById(DnsMadeEasy dns,string domain, string id, JSONValue data)
     return dns.restConnect("domains/" ~ domain ~ "/records/" ~ id, HTTP.Method.put, data);
 }
 
-
+version(StandAlone)
+{
 void main(string[] args)
 {
     auto dns = DnsMadeEasy(DnsMadeEasyAPI, DnsMadeEasySecret);
@@ -312,4 +313,5 @@ void main(string[] args)
     record = dns.updateRecordById("testdomain1.com", "6883496", data);
     writefln(record.prettyPrint);
 */
+}
 }
