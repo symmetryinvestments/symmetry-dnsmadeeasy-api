@@ -22,7 +22,7 @@ import std.digest.hmac;
 import std.digest.digest;
 import std.digest.sha;
 import std.string:representation;
-import kaleidic.api.dnsmadeeasy.auth;
+import kaleidic.auth;
 import std.conv;
 
 string[] weekDays=["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
@@ -242,7 +242,7 @@ version(StandAlone)
 {
 void main(string[] args)
 {
-    auto dns = DnsMadeEasy(DnsMadeEasyAPI, DnsMadeEasySecret);
+    auto dns = DnsMadeEasy(dnsMadeEasyToken(), dnsMadeEasySecret());
     writefln("hash: %s",dns.createHash);
     // listDomains: returns a list of all domains
     writefln("\nList all domains: \n");
