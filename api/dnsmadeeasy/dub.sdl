@@ -2,4 +2,14 @@ name "dnsmadeeasy"
 description "A minimal D application."
 copyright "Copyright © 2015, laeeth"
 authors "laeeth"
+dependency "kaleidic-auth" version="*"
+importPaths "../../auth/source"
 dependency "kaleidic-helper" version="*"
+importPaths "../../helper/source"
+configuration "dnsmadeeasy" {
+	targetType "library"
+}
+configuration "tests" {
+	versions "StandAlone"
+	targetType "executable"
+}

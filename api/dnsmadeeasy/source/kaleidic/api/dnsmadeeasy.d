@@ -9,7 +9,7 @@
     Alpha and not well-tested, so use at your own risk.
 */
 
-module kaleidic.api.dnsmadeeasy.dnsmadeeasy;
+module kaleidic.api.dnsmadeeasy;
 import std.json;
 import std.net.curl;
 import std.datetime:SysTime,Clock;
