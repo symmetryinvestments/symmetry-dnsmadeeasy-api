@@ -7,6 +7,13 @@ dependency "kaleidic-helper" version="*"
 configuration "dnsmadeeasy" {
 	targetType "library"
 }
+configuration "standalone" {
+	targetType "executable"
+}
+configuration "static" {
+	targetType "executable"
+	dflags "-static"
+}
 configuration "tests" {
 	versions "StandAlone"
 	targetType "executable"
