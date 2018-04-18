@@ -11,22 +11,11 @@
 
 ///
 module kaleidic.api.dnsmadeeasy;
-import std.string;
-import std.array:front;
-import std.json;
-import std.net.curl;
-import std.datetime:SysTime,Clock;
-import std.stdio;
-import std.exception:enforce;
-import std.format;
-import std.array:appender,array;
-//import kaleidic.helper.prettyjson;
-import std.digest.hmac;
-import std.digest.digest;
-import std.digest.sha;
-import std.string:representation;
-//import kaleidic.auth;
-import std.conv;
+
+import std.datetime: SysTime;
+import std.net.curl: HTTP;
+import std.json: JSONValue;
+
 
 ///
 string[] weekDays=["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
@@ -52,6 +41,7 @@ string randomPassword(int n)
 ///
 string joinUrl(string url, string endpoint)
 {
+    import std.exception: enforce;
     enforce(url.length>0, "broken url");
     if (url[$-1]=='/')
         url=url[0..$-1];
@@ -62,6 +52,9 @@ string joinUrl(string url, string endpoint)
 /// Sat, 12 Feb 2011 20:59:04 GMT
 string toHttpString(SysTime dt)
 {
+    import std.format: format;
+    import std.conv: to;
+
     return format("%s, %02d %s %s %02d:%02d:%02d %s",
         weekDays[dt.dayOfWeek.to!size_t],
         dt.day,
@@ -102,6 +95,12 @@ struct DnsMadeEasy
 
     auto createHash()
     {
+        import std.datetime: Clock;
+        import std.string: representation;
+        import std.digest.hmac: hmac;
+        import std.digest.sha: SHA1;
+        import std.digest.digest: toHexString, LetterCase;
+
         auto date=Clock.currTime
                 .toHttpString;
         return HashResult(date,
@@ -183,6 +182,11 @@ struct EasyDomainRecordSecondary
 ///
 auto restConnect(DnsMadeEasy dns, string resource, HTTP.Method method, JSONValue params=JSONValue(null))
 {
+    import std.exception: enforce;
+    import std.array: appender;
+    import std.stdio: writeln;
+    import std.json: parseJSON;
+
     enforce(dns.api.length>0 && dns.secret.length>0,"must provide API and token first");
     auto url=dns.endPoint.joinUrl(resource);
     auto client=HTTP(url);
@@ -208,6 +212,8 @@ auto restConnect(DnsMadeEasy dns, string resource, HTTP.Method method, JSONValue
 /// listDomains
 long[string] listDomains(DnsMadeEasy dns)
 {
+    import std.array: appender;
+
 	long[string] ret;
     auto domains=appender!(string[]);
     auto response = dns.restConnect("managed", HTTP.Method.get);
@@ -229,6 +235,7 @@ auto deleteAllDomains(DnsMadeEasy dns)
 ///
 auto getDomain(DnsMadeEasy dns, long domainID)
 {
+    import std.conv: to;
     return dns.restConnect("domains/" ~ domainID.to!string, HTTP.Method.get );
 }
 
@@ -252,12 +259,14 @@ auto addDomain(DnsMadeEasy dns, string domain)
 ///
 auto getRecords(DnsMadeEasy dns, long domainID)
 {
+    import std.conv: to;
     return dns.restConnect("managed/" ~ domainID.to!string~"/records", HTTP.Method.get);
 }
 
 ///
 auto addRecord(DnsMadeEasy dns, long domainID, JSONValue data)
 {
+    import std.conv: to;
     return dns.restConnect("managed/" ~ domainID.to!string ~ "/records", HTTP.Method.post, data);
 }
 
@@ -266,12 +275,14 @@ auto addRecord(DnsMadeEasy dns, long domainID, JSONValue data)
 ///
 auto getRecordById(DnsMadeEasy dns, long domainID, string id)
 {
+    import std.conv: to;
     return dns.restConnect("managed/" ~ domainID.to!string ~ "/records/" ~ id, HTTP.Method.get);
 }
 
 ///
 auto deleteRecordById(DnsMadeEasy dns, long domainID, string id)
 {
+    import std.conv: to;
     return dns.restConnect("managed/" ~ domainID.to!string ~ "/records/" ~ id, HTTP.Method.del);
 }
 
