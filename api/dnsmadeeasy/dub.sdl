@@ -6,8 +6,16 @@ dependency "kaleidic-auth" version="*"
 dependency "kaleidic-helper" version="*"
 configuration "dnsmadeeasy" {
 	targetType "library"
+    excludedSourceFiles "source/main.d"
 }
-configuration "tests" {
-	versions "StandAlone"
+configuration "standalone" {
+	targetType "executable"
+}
+configuration "static" {
+	targetType "executable"
+	dflags "-static"
+}
+configuration "test" {
+	versions "KaleidicDnsTest"
 	targetType "executable"
 }

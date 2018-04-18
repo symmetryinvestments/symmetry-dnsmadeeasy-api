@@ -11,30 +11,37 @@
 
 ///
 module kaleidic.api.dnsmadeeasy;
-import std.json;
-import std.net.curl;
-import std.datetime:SysTime,Clock;
-import std.stdio;
-import std.exception:enforce;
-import std.format;
-import std.array:appender,array;
-import kaleidic.helper.prettyjson;
-import std.digest.hmac;
-import std.digest.digest;
-import std.digest.sha;
-import std.string:representation;
-import kaleidic.auth;
-import std.conv;
+
+import std.datetime: SysTime;
+import std.net.curl: HTTP;
+import std.json: JSONValue;
+
 
 ///
 string[] weekDays=["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
 ///
 string[] monthStrings= ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
 
+string randomPassword(int n)
+{
+	import std.algorithm : fill;
+	import std.ascii : letters, digits;
+	import std.conv : to;
+	import std.random : randomCover, rndGen;
+	import std.range : chain;
+	auto asciiLetters = to!(dchar[])(letters);
+	auto asciiDigits = to!(dchar[])(digits);
+
+	dchar[] key;
+	key.length = n;
+	fill(key[], randomCover(chain(asciiLetters, asciiDigits), rndGen));
+	return key.to!string;
+}
 
 ///
 string joinUrl(string url, string endpoint)
 {
+    import std.exception: enforce;
     enforce(url.length>0, "broken url");
     if (url[$-1]=='/')
         url=url[0..$-1];
@@ -45,6 +52,9 @@ string joinUrl(string url, string endpoint)
 /// Sat, 12 Feb 2011 20:59:04 GMT
 string toHttpString(SysTime dt)
 {
+    import std.format: format;
+    import std.conv: to;
+
     return format("%s, %02d %s %s %02d:%02d:%02d %s",
         weekDays[dt.dayOfWeek.to!size_t],
         dt.day,
@@ -53,7 +63,7 @@ string toHttpString(SysTime dt)
         dt.hour,
         dt.minute,
         dt.second,
-        dt.timezone.dstName); 
+        dt.timezone.dstName);
 }
 
 ///
@@ -68,7 +78,7 @@ struct DnsMadeEasy
 {
     string api;
     string secret;
-    string endPoint="http://api.dnsmadeeasy.com/V1.2/";
+    string endPoint="http://api.dnsmadeeasy.com/V2.0/dns/";
 
     // dns.:Sat, 12 Feb 2011 20:59:04 GMT
     this(string api, string secret, string endPoint=null)
@@ -81,10 +91,16 @@ struct DnsMadeEasy
 
 
     //return strftime("%a, %d %b %Y %H:%M:%S +0000", gmtime());
-    
+
 
     auto createHash()
     {
+        import std.datetime: Clock;
+        import std.string: representation;
+        import std.digest.hmac: hmac;
+        import std.digest.sha: SHA1;
+        import std.digest.digest: toHexString, LetterCase;
+
         auto date=Clock.currTime
                 .toHttpString;
         return HashResult(date,
@@ -153,7 +169,7 @@ struct EasyDomainRecordHttpRed
     string keywords;
     string title;
     string redirectType;
-    bool hardLink;    
+    bool hardLink;
 }
 
 ///
@@ -166,6 +182,11 @@ struct EasyDomainRecordSecondary
 ///
 auto restConnect(DnsMadeEasy dns, string resource, HTTP.Method method, JSONValue params=JSONValue(null))
 {
+    import std.exception: enforce;
+    import std.array: appender;
+    import std.stdio: writeln;
+    import std.json: parseJSON;
+
     enforce(dns.api.length>0 && dns.secret.length>0,"must provide API and token first");
     auto url=dns.endPoint.joinUrl(resource);
     auto client=HTTP(url);
@@ -184,17 +205,21 @@ auto restConnect(DnsMadeEasy dns, string resource, HTTP.Method method, JSONValue
         return data.length;
     };
     client.perform();                 // rely on curl to throw exceptions on 204, >=500
+    debug writeln(cast(string)response.data);
     return parseJSON(cast(string)response.data);
 }
 
 /// listDomains
-auto listDomains(DnsMadeEasy dns)
+long[string] listDomains(DnsMadeEasy dns)
 {
+    import std.array: appender;
+
+	long[string] ret;
     auto domains=appender!(string[]);
-    auto response = dns.restConnect("domains", HTTP.Method.get);
-    foreach(domain;response["list"].array)
-        domains.put(domain.str);
-    return domains.data;
+    auto response = dns.restConnect("managed", HTTP.Method.get);
+    foreach(domain;response["data"].array)
+        ret[domain["name"].str] = domain["id"].integer;
+    return ret;
 }
 
 /// !!!! Following function deletes all of your domains. Use that with caution. Why anybody would need this, who knows.!!!!!!!
@@ -208,15 +233,16 @@ auto deleteAllDomains(DnsMadeEasy dns)
 */
 
 ///
-auto getDomain(DnsMadeEasy dns, string domain)
+auto getDomain(DnsMadeEasy dns, long domainID)
 {
-    return dns.restConnect("domains/" ~ domain, HTTP.Method.get );
+    import std.conv: to;
+    return dns.restConnect("domains/" ~ domainID.to!string, HTTP.Method.get );
 }
 
 ///
-auto deleteDomain(DnsMadeEasy dns,string domain)
+auto deleteDomain(DnsMadeEasy dns, string domainID)
 {
-    return dns.restConnect("domains/" ~ domain, HTTP.Method.del);
+    return dns.restConnect("domains/" ~ domainID, HTTP.Method.del);
 }
 
 ///
@@ -231,112 +257,39 @@ auto addDomain(DnsMadeEasy dns, string domain)
 
 
 ///
-auto getRecords(DnsMadeEasy dns, string domain)
+auto getRecords(DnsMadeEasy dns, long domainID)
 {
-    return dns.restConnect("domains/" ~ domain ~ "/records", HTTP.Method.get);
+    import std.conv: to;
+    return dns.restConnect("managed/" ~ domainID.to!string~"/records", HTTP.Method.get);
 }
 
 ///
-auto addRecord(DnsMadeEasy dns, string domain, JSONValue data)
+auto addRecord(DnsMadeEasy dns, long domainID, JSONValue data)
 {
-    return dns.restConnect("domains/" ~ domain ~ "/records", HTTP.Method.post, data);
+    import std.conv: to;
+    return dns.restConnect("managed/" ~ domainID.to!string ~ "/records", HTTP.Method.post, data);
 }
 
 // /domains/{domainName}/records/{recordId}
 
 ///
-auto getRecordById(DnsMadeEasy dns,string domain, string id)
+auto getRecordById(DnsMadeEasy dns, long domainID, string id)
 {
-    return dns.restConnect("domains/" ~ domain ~ "/records/" ~ id, HTTP.Method.get);
+    import std.conv: to;
+    return dns.restConnect("managed/" ~ domainID.to!string ~ "/records/" ~ id, HTTP.Method.get);
 }
 
 ///
-auto deleteRecordById(DnsMadeEasy dns,string domain, string id)
+auto deleteRecordById(DnsMadeEasy dns, long domainID, string id)
 {
-    return dns.restConnect("domains/" ~ domain ~ "/records/" ~ id, HTTP.Method.del);
+    import std.conv: to;
+    return dns.restConnect("managed/" ~ domainID.to!string ~ "/records/" ~ id, HTTP.Method.del);
 }
 
+/** NOT ACTUALLY POSSIBLE
 ///
 auto updateRecordById(DnsMadeEasy dns,string domain, string id, JSONValue data)
 {
     return dns.restConnect("domains/" ~ domain ~ "/records/" ~ id, HTTP.Method.put, data);
 }
-
-version(StandAlone)
-{
-    ///
-    void main(string[] args)
-    {
-        auto dns = DnsMadeEasy(dnsMadeEasyToken(), dnsMadeEasySecret());
-        writefln("hash: %s",dns.createHash);
-        // listDomains: returns a list of all domains
-        writefln("\nList all domains: \n");
-        auto domains = dns.listDomains;
-        foreach(d;domains)
-            writefln(d);
-
-        // listRecords for a single domain
-        writefln("\nList records for a single domain:");
-        auto records = dns.getRecords("kaleidicassociates.com");
-        foreach(entry;records.array)
-        {
-            writefln("");
-            foreach(key, value;entry.object)
-                writefln("%s : %s",key,value.to!string);
-        }
-        
-        // getDomain for a single domain
-        writefln("\nGet general info about a single domain: \n");
-        auto domainInfo = dns.getDomain("kaleidicassociates.com");
-        writefln("%s",domainInfo.prettyPrint);    
-        
-
-        // delete a domain
-        
-        writefln("Delete domain: \n");
-        auto result = dns.deleteDomain("testdomain2.com");
-        if ("status" in result)
-            writefln("status: %s",result["status"]);
-        else
-            writefln("* failed to delete: result was - %s",result.prettyPrint);
-        
-
-    /**
-        Following is not well tested
-
-        // add a domain
-        
-        writefln("\nAdd domain");
-        auto content = dns.addDomain("testdomain5.com");
-        writefln(content["name"].str ~ " added!");
-
-
-        
-        // add a single record to a domain    
-
-        writefln("\nAdd record to domain: \n");
-        JSONValue data;
-        data["name"]=args[1];
-        data["type"]="A";
-        data["data"]=args[2];
-        data["gtdLocation"]="Default";
-        data["ttl"]=1800;
-        result = dns.addRecord("kaleidicassociates.com", data);
-        writefln(result.prettyPrint);
-        JSONValue record;
-        record = dns.getRecordById("kaleidicassociates.com","6883496");
-        writefln(record.prettyPrint);
-      
-        record = dns.deleteRecordById("test1.com", "6883496");
-        
-        data=JSONValue(null);
-        data["name"]="";
-        data["type"]="MX";
-        data["data"]="10 mail";
-        data["gtdLocation"]=["DEFAULT"];
-        data["ttl"]=1800;
-        record = dns.updateRecordById("testdomain1.com", "6883496", data);
-        writefln(record.prettyPrint);
-    */
-    }
-}
+*/
