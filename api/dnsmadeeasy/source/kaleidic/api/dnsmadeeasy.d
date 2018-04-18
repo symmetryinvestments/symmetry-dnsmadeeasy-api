@@ -233,9 +233,9 @@ auto getDomain(DnsMadeEasy dns, long domainID)
 }
 
 ///
-auto deleteDomain(DnsMadeEasy dns,string domainID)
+auto deleteDomain(DnsMadeEasy dns, string domainID)
 {
-    return dns.restConnect("domains/" ~ domainID.to!string, HTTP.Method.del);
+    return dns.restConnect("domains/" ~ domainID, HTTP.Method.del);
 }
 
 ///
@@ -264,13 +264,13 @@ auto addRecord(DnsMadeEasy dns, long domainID, JSONValue data)
 // /domains/{domainName}/records/{recordId}
 
 ///
-auto getRecordById(DnsMadeEasy dns,long domainID, string id)
+auto getRecordById(DnsMadeEasy dns, long domainID, string id)
 {
     return dns.restConnect("managed/" ~ domainID.to!string ~ "/records/" ~ id, HTTP.Method.get);
 }
 
 ///
-auto deleteRecordById(DnsMadeEasy dns,long domainID, string id)
+auto deleteRecordById(DnsMadeEasy dns, long domainID, string id)
 {
     return dns.restConnect("managed/" ~ domainID.to!string ~ "/records/" ~ id, HTTP.Method.del);
 }
