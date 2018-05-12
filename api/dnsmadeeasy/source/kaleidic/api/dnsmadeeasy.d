@@ -22,7 +22,7 @@ string[] weekDays=["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
 ///
 string[] monthStrings= ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
 
-string randomPassword(int n)
+export string randomPassword(int n)
 {
 	import std.algorithm : fill;
 	import std.ascii : letters, digits;
@@ -210,7 +210,7 @@ auto restConnect(DnsMadeEasy dns, string resource, HTTP.Method method, JSONValue
 }
 
 /// listDomains
-long[string] listDomains(DnsMadeEasy dns)
+export long[string] listDomains(DnsMadeEasy dns)
 {
     import std.array: appender;
 
@@ -223,7 +223,7 @@ long[string] listDomains(DnsMadeEasy dns)
 }
 
 /// !!!! Following function deletes all of your domains. Use that with caution. Why anybody would need this, who knows.!!!!!!!
-auto deleteAllDomains(DnsMadeEasy dns)
+export auto deleteAllDomains(DnsMadeEasy dns)
 {
     return dns.restConnect("domains", HTTP.Method.del);
 }
@@ -233,20 +233,20 @@ auto deleteAllDomains(DnsMadeEasy dns)
 */
 
 ///
-auto getDomain(DnsMadeEasy dns, long domainID)
+export auto getDomain(DnsMadeEasy dns, long domainID)
 {
     import std.conv: to;
     return dns.restConnect("domains/" ~ domainID.to!string, HTTP.Method.get );
 }
 
 ///
-auto deleteDomain(DnsMadeEasy dns, string domainID)
+export auto deleteDomain(DnsMadeEasy dns, string domainID)
 {
     return dns.restConnect("domains/" ~ domainID, HTTP.Method.del);
 }
 
 ///
-auto addDomain(DnsMadeEasy dns, string domain)
+export auto addDomain(DnsMadeEasy dns, string domain)
 {
     return dns.restConnect("domains/" ~ domain, HTTP.Method.put);
 }
@@ -257,14 +257,14 @@ auto addDomain(DnsMadeEasy dns, string domain)
 
 
 ///
-auto getRecords(DnsMadeEasy dns, long domainID)
+export auto getRecords(DnsMadeEasy dns, long domainID)
 {
     import std.conv: to;
     return dns.restConnect("managed/" ~ domainID.to!string~"/records", HTTP.Method.get);
 }
 
 ///
-auto addRecord(DnsMadeEasy dns, long domainID, JSONValue data)
+export auto addRecord(DnsMadeEasy dns, long domainID, JSONValue data)
 {
     import std.conv: to;
     return dns.restConnect("managed/" ~ domainID.to!string ~ "/records", HTTP.Method.post, data);
@@ -273,14 +273,14 @@ auto addRecord(DnsMadeEasy dns, long domainID, JSONValue data)
 // /domains/{domainName}/records/{recordId}
 
 ///
-auto getRecordById(DnsMadeEasy dns, long domainID, string id)
+export auto getRecordById(DnsMadeEasy dns, long domainID, string id)
 {
     import std.conv: to;
     return dns.restConnect("managed/" ~ domainID.to!string ~ "/records/" ~ id, HTTP.Method.get);
 }
 
 ///
-auto deleteRecordById(DnsMadeEasy dns, long domainID, string id)
+export auto deleteRecordById(DnsMadeEasy dns, long domainID, string id)
 {
     import std.conv: to;
     return dns.restConnect("managed/" ~ domainID.to!string ~ "/records/" ~ id, HTTP.Method.del);
