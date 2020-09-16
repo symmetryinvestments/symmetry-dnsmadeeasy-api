@@ -22,7 +22,7 @@ import std.format;
 import std.array:appender,array;
 import kprop.helper.prettyjson;
 import std.digest.hmac;
-import std.digest.digest;
+import std.digest;
 import std.digest.sha;
 import std.string:representation;
 import kprop.api.dnsmadeeasy.auth;
@@ -51,7 +51,7 @@ string toHttpString(SysTime dt)
         dt.hour,
         dt.minute,
         dt.second,
-        dt.timezone.dstName); 
+        dt.timezone.dstName);
 }
 
 struct HashResult
@@ -77,7 +77,7 @@ struct DnsMadeEasy
 
 
     //return strftime("%a, %d %b %Y %H:%M:%S +0000", gmtime());
-    
+
 
     auto createHash()
     {
@@ -204,7 +204,7 @@ struct EasyDomainRecordHttpRed
     string keywords;
     string title;
     string redirectType;
-    bool hardLink;    
+    bool hardLink;
 }
 
 struct EasyDomainRecordSecondary
@@ -273,7 +273,7 @@ auto getDomainRecord(DnsMadeEasy dns, DomainID id, bool secondary=false)
 auto updateDomains(DnsMadeEasy dns, EasyDomainID[] ids, string[string] fields, bool secondary=false)
 {
     fields["ids"]=ids.map!(a=>a.value);
-    return dns.restConnect(secondary?"dns/secondary":"dns/managed" , HTTP.Method.put, data);    
+    return dns.restConnect(secondary?"dns/secondary":"dns/managed" , HTTP.Method.put, data);
 }
 
 
@@ -347,7 +347,7 @@ auto deleteRecord(DnsMadeEasy dns,EasyDomainID domain, string id, JSONValue data
 
 auto getSoa(DnsMadeEasy dns)
 {
-    return dns.restConnect("dns/soa/",HTTP.Method.get);                
+    return dns.restConnect("dns/soa/",HTTP.Method.get);
 }
 auto getSoa(DnsMadeEasy dns, EasyDomainID domain)
 {
@@ -355,11 +355,11 @@ auto getSoa(DnsMadeEasy dns, EasyDomainID domain)
 }
 auto updateSoa(DnsMadeEasy dns, EasyDomainID domain)
 {
-    return dns.restConnect("dns/soa/"~domain.id.to!string,HTTP.Method.put,data);        
+    return dns.restConnect("dns/soa/"~domain.id.to!string,HTTP.Method.put,data);
 }
 auto createSoa(DnsMadeEasy dns, EasyDomainID domain,JSONValue data)
 {
-    return dns.restConnect("dns/soa/"~domain.id.to!string,HTTP.Method.post,data);        
+    return dns.restConnect("dns/soa/"~domain.id.to!string,HTTP.Method.post,data);
 }
 auto deleteSoa(DnsMadeEasy dns, EasyDomainID domain)
 {
@@ -368,7 +368,7 @@ auto deleteSoa(DnsMadeEasy dns, EasyDomainID domain)
 
 auto getVanity(DnsMadeEasy dns)
 {
-    return dns.restConnect("dns/vanity",HTTP.Method.get);                
+    return dns.restConnect("dns/vanity",HTTP.Method.get);
 }
 auto getVanity(DnsMadeEasy dns, EasyDomainID domain)
 {
@@ -376,11 +376,11 @@ auto getVanity(DnsMadeEasy dns, EasyDomainID domain)
 }
 auto updateVanity(DnsMadeEasy dns, EasyDomainID domain)
 {
-    return dns.restConnect("dns/vanity/"~domain.id.to!string,HTTP.Method.put,data);        
+    return dns.restConnect("dns/vanity/"~domain.id.to!string,HTTP.Method.put,data);
 }
 auto createVanity(DnsMadeEasy dns, EasyDomainID domain,JSONValue data)
 {
-    return dns.restConnect("dns/vanity/"~domain.id.to!string,HTTP.Method.post,data);        
+    return dns.restConnect("dns/vanity/"~domain.id.to!string,HTTP.Method.post,data);
 }
 auto deleteVanity(DnsMadeEasy dns, EasyDomainID domain)
 {
@@ -397,11 +397,11 @@ auto getTransfer(DnsMadeEasy dns, EasyDomainID domain)
 }
 auto updateTransfer(DnsMadeEasy dns, EasyDomainID domain)
 {
-    return dns.restConnect("dns/transferAcl/"~domain.id.to!string,HTTP.Method.put,data);        
+    return dns.restConnect("dns/transferAcl/"~domain.id.to!string,HTTP.Method.put,data);
 }
 auto createTransfer(DnsMadeEasy dns, EasyDomainID domain,JSONValue data)
 {
-    return dns.restConnect(secondary?"":"dns/transferAcl/"~domain.id.to!string,HTTP.Method.post,data);        
+    return dns.restConnect(secondary?"":"dns/transferAcl/"~domain.id.to!string,HTTP.Method.post,data);
 }
 auto deleteTransfer(DnsMadeEasy dns, EasyDomainID domain)
 {
@@ -411,15 +411,15 @@ auto deleteTransfer(DnsMadeEasy dns, EasyDomainID domain)
 
 auto getFolders(DnsMadeEasy dns, bool secondary=false)
 {
-    return dns.restConnect(secondary?"":"security/folder/",HTTP.Method.get);    
+    return dns.restConnect(secondary?"":"security/folder/",HTTP.Method.get);
 }
 auto updateFolder(DnsMadeEasy dns, JSONValue data, bool secondary=false)
 {
-    return dns.restConnect(secondary?"":"security/folder/",HTTP.Method.put,data);        
+    return dns.restConnect(secondary?"":"security/folder/",HTTP.Method.put,data);
 }
 auto createFolder(DnsMadeEasy dns, JSONValue data)
 {
-    return dns.restConnect(secondary?"":"security/folder/",HTTP.Method.post,data);        
+    return dns.restConnect(secondary?"":"security/folder/",HTTP.Method.post,data);
 }
 auto deleteFolder(DnsMadeEasy dns, JSONValue data)
 {
@@ -469,35 +469,35 @@ void main(string[] args)
         foreach(key, value;entry.object)
             writefln("%s : %s",key,value.to!string);
     }
-    
+
     // getDomain for a single domain
     writefln("\nGet general info about a single domain: \n");
     auto domainInfo = dns.getDomain("kaleidicassociates.com");
-    writefln("%s",domainInfo.prettyPrint);    
-    
+    writefln("%s",domainInfo.prettyPrint);
+
 
     // delete a domain
-    
+
     writefln("Delete domain: \n");
     auto result = dns.deleteDomain("testdomain2.com");
     if ("status" in result)
         writefln("status: %s",result["status"]);
     else
         writefln("* failed to delete: result was - %s",result.prettyPrint);
-    
+
 
 /**
     Following is not well tested
 
     // add a domain
-    
+
     writefln("\nAdd domain");
     auto content = dns.addDomain("testdomain5.com");
     writefln(content["name"].str ~ " added!");
 
 
-    
-    // add a single record to a domain    
+
+    // add a single record to a domain
 
     writefln("\nAdd record to domain: \n");
     JSONValue data;
@@ -511,9 +511,9 @@ void main(string[] args)
     JSONValue record;
     record = dns.getRecordById("kaleidicassociates.com","6883496");
     writefln(record.prettyPrint);
-  
+
     record = dns.deleteRecordById("test1.com", "6883496");
-    
+
     data=JSONValue(null);
     data["name"]="";
     data["type"]="MX";
