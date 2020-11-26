@@ -99,7 +99,7 @@ struct DnsMadeEasy
         import std.string: representation;
         import std.digest.hmac: hmac;
         import std.digest.sha: SHA1;
-        import std.digest.digest: toHexString, LetterCase;
+        import std.digest: toHexString, LetterCase;
 
         auto date=Clock.currTime
                 .toHttpString;
