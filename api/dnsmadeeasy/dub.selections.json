@@ -1,7 +1,0 @@
-{
-	"fileVersion": 1,
-	"versions": {
-		"kaleidic-auth": "~master",
-		"kaleidic-helper": "~master"
-	}
-}

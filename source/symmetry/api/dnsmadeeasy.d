@@ -10,7 +10,7 @@
 */
 
 ///
-module kaleidic.api.dnsmadeeasy;
+module symmetry.api.dnsmadeeasy;
 
 import std.datetime: SysTime;
 import std.net.curl: HTTP;

@@ -1,12 +1,19 @@
+/+
+	This test is old and does not work as API has changed slightly.
++/
+
 version(KaleidicDnsTest)
 {
     ///
     void main(string[] args)
     {
-        import kaleidic.api.dnsmadeeasy: DnsMadeEasy, listDomains, getRecords, getDomain, deleteDomain;
+        import symmetry.api.dnsmadeeasy3: DnsMadeEasy, listDomains, getRecords, getDomain, deleteDomain;
+		import symmetry.helper.prettyjson;
         import std.process: environment;
         import std.array: front;
         import std.stdio: writeln, writefln;
+		import asdf;
+		import std.conv : to;
 
         auto dnsMadeEasyToken=environment.get("DNSMADEEASY_TOKEN");
         auto dnsMadeEasySecret=environment.get("DNSMADEEASY_SECRET");
@@ -20,18 +27,18 @@ version(KaleidicDnsTest)
 
         // listRecords for a single domain
         writefln("\nList records for a single domain:");
-        auto records = dns.getRecords(domains.keys);
-        foreach(entry;records.array)
+        auto records = dns.getRecords(domains[domains.keys.front].to!long);
+        foreach(entry;records.byElement)
         {
             writefln("");
-            foreach(key, value;entry.object)
-                writefln("%s : %s",key,value.to!string);
+            foreach(kv;entry.byKeyValue)
+                writefln("%s : %s",kv.key,kv.value.to!string);
         }
 
         // getDomain for a single domain
         writefln("\nGet general info about a single domain: \n");
-        auto domainInfo = dns.getDomain(domains.front);
-        writefln("%s",domainInfo.prettyPrint);
+        auto domainInfo = dns.getDomain(domains[domains.keys.front].to!long);
+        writefln("%s",domainInfo.toJsonString);
 
 
         // delete a domain
@@ -39,9 +46,9 @@ version(KaleidicDnsTest)
         writefln("Delete domain: \n");
         auto result = dns.deleteDomain("testdomain2.com");
         if ("status" in result)
-            writefln("status: %s",result["status"]);
+            writefln("status: %s",result["status"].get!string);
         else
-            writefln("* failed to delete: result was - %s",result.prettyPrint);
+            writefln("* failed to delete: result was - %s",result.toJsonString);
 
 
         /**
@@ -85,7 +92,7 @@ version(KaleidicDnsTest)
 } else {
     void main(string[] args)
     {
-        import kaleidic.api.dnsmadeeasy: DnsMadeEasy, listDomains, getRecords, randomPassword, addRecord, deleteRecordById;
+        import symmetry.api.dnsmadeeasy: DnsMadeEasy, listDomains, getRecords, randomPassword, addRecord, deleteRecordById;
         import std.stdio: writefln;
         import std.string: strip, toLower;
         import std.conv: to;

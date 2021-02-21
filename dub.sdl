@@ -2,8 +2,8 @@ name "dnsmadeeasy"
 description "A minimal D application."
 copyright "Copyright © 2015, laeeth"
 authors "laeeth"
-dependency "kaleidic-auth" version="*"
-dependency "kaleidic-helper" version="*"
+dependency "asdf" version="~master"
+
 configuration "dnsmadeeasy" {
 	targetType "library"
     excludedSourceFiles "source/main.d"
@@ -15,6 +15,8 @@ configuration "static" {
 	targetType "executable"
 	dflags "-static"
 }
+
+// note test is broken with API change
 configuration "test" {
 	versions "KaleidicDnsTest"
 	targetType "executable"

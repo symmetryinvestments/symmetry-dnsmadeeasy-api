@@ -9,7 +9,7 @@
     Alpha and not well-tested, so use at your own risk.
 */
 
-module kaleidic.api.dnsmadeeasyv2;
+module symmetry.api.dnsmadeeasyv2;
 /+
 not yet finished
 
